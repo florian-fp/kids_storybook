@@ -7,6 +7,7 @@ This module generates age-appropriate children's stories using OpenAI's GPT-4 mo
 
 import os
 from dotenv import load_dotenv
+import requests
 
 from openai import OpenAI
 from openai import OpenAIError
@@ -16,6 +17,7 @@ import json
 from typing import Dict, Optional
 from dataclasses import dataclass
 
+import base64
 
 class StoryGenerator:
     """Handles the generation of children's stories using OpenAI API."""
@@ -57,20 +59,10 @@ class StoryGenerator:
         - Centered around an engaging and magical adventure that teaches a gentle life lesson (like kindness, courage, friendship, or curiosity)
         - Include vivid descriptions to inspire illustration ideas (e.g., "a glowing rainbow bridge made of jellybeans")
         - Add a short, one-sentence title and a 1–2 sentence summary at the beginning
-        - Provide the output as a JSON with title, summary, and story
+        - Provide the output as a JSON with title, summary, and story content. Story content should only include the story, not the title or summary.
         """
     
-    def _get_user_prompt(self) -> str:
-        """Generate the user-specific prompt with story requirements."""
-        
-        return """
-        - Main character: a little baby canary
-        - Adventure or challenge: the canary wants to fly all the way to the top of North Beach tower
-        - Where does the story take place: the city of San Francisco
-        - Any special message or lesson: with determination, you can achieve anything you want in life
-        """
-    
-    def generate_story(self) -> Dict[str, str]:
+    def generate_story(self, user_prompt: str) -> Dict[str, str]:
         """
         Generate a children's story based on configured parameters.
         
@@ -85,61 +77,133 @@ class StoryGenerator:
             consolidated_prompt = (
                 self._get_base_prompt() + 
                 "\nMake sure this story includes the following:" + 
-                self._get_user_prompt()
+                user_prompt
             )
+            
+            # Define the function schema for structured output
+            function_schema = {
+                "type": "function",
+                "function": {
+                    "name": "create_story",
+                    "description": "Create a children's story with title, summary, and content",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "A short, catchy title for the story"
+                            },
+                            "summary": {
+                                "type": "string", 
+                                "description": "A brief 1-2 sentence summary of the story"
+                            },
+                            "story_content": {
+                                "type": "string",
+                                "description": "The full story content with paragraphs and formatting"
+                            }
+                        },
+                        "required": ["title", "summary", "story_content"]
+                    }
+                }
+            }
             
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "user", "content": consolidated_prompt}
                 ],
+                tools=[function_schema],
+                tool_choice={"type": "function", "function": {"name": "create_story"}},
                 temperature=0.7,
                 max_tokens=1000
             )
             
-            # Extract the response content
-            story_text = response.choices[0].message.content
+            # Extract the function call response
+            tool_call = response.choices[0].message.tool_calls[0]
+            story_data = json.loads(tool_call.function.arguments)
             
-            # Try to parse as JSON, fallback to plain text if needed
-            try:
-                story_data = json.loads(story_text)
-                return story_data
-            except json.JSONDecodeError:
-                # If not JSON, return as plain text
-                return {
-                    "title": "Generated Story",
-                    "summary": "A magical children's story",
-                    "story": story_text
-                }
-                
+            return story_data
+        
         except OpenAIError as e:
             raise OpenAIError(f"Error generating story: {e}")
         except Exception as e:
             raise ValueError(f"Unexpected error during story generation: {e}")
 
+class ImageGenerator:
+    """Handles the generation of images using OpenAI API.
+    Args:
+        model: OpenAI model for image generation to be used
+        nb_images: number of images to generate for the story
+        size: size of the images
+        target_age: target age group for the story
+        api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
+    """
+
+    def __init__(self, model: str = "gpt-image-1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, api_key: Optional[str] = None):
+        self.model = model
+        self.nb_images = nb_images
+        self.size = size
+        self.target_age = 3
+        
+        load_dotenv()
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
+            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable.")
+        self.client = OpenAI(api_key=self.api_key)
+        
+    def generate_image(self, prompt: str):
+        """Generate an image based on the prompt."""
+        image = self.client.images.generate(
+            model = self.model,
+            prompt = prompt,
+            n = self.nb_images,
+            size = self.size
+        )
+
+        # Decode the base64 image data
+        image_bytes = base64.b64decode(image.data[0].b64_json)
+        
+        # Save the image as output.png
+        with open("output.png", "wb") as f:
+            f.write(image_bytes)
+
+        return image_bytes
+
 
 def main():
-    """Main function to demonstrate story generation."""
+
     try:
-        # Initialize the story generator
-        generator = StoryGenerator()
+        # Generate a story
+        USER_PROMPT = """
+        - Main character: a little baby canary
+        - Adventure or challenge: the canary wants to fly all the way to the top of North Beach tower
+        - Where does the story take place: the city of San Francisco
+        - Any special message or lesson: with determination, you can achieve anything you want in life
+        """
+        print("\n=== Story Generation ===")
+        story_generator = StoryGenerator()
+        story = story_generator.generate_story(USER_PROMPT)
         
-        # Generate the story
-        story = generator.generate_story()
+        print("\n=== Successful Story Generation===\n")
+        print(f"Title:\n {story.get('title', 'Untitled')}\n")
+        print(f"Summary:\n {story.get('summary', 'No summary available')}\n")
+        print(f"Story content:\n {story.get('story_content', 'No story content available')}\n")
+
+        # # Generate an image
+        # IMAGE_PROMPT = "A picture of a cute golden retriever puppy running in space."
+        # print("\n=== Image Generation Example ===")
         
-        # Print the results
-        print("Generated Story:")
-        print("=" * 50)
-        print(f"Title: {story.get('title', 'Untitled')}")
-        print(f"Summary: {story.get('summary', 'No summary available')}")
-        print("\nStory:")
-        print(story.get('story', 'No story content available'))
-        
+        # image_generator = ImageGenerator()
+        # image = image_generator.generate_image(IMAGE_PROMPT)
+        # print(f"\n=== Successful Image Generation ===")
+
     except (ValueError, OpenAIError) as e:
         print(f"Error: {e}")
+    
     except Exception as e:
         print(f"Unexpected error: {e}")
 
+        
 
 if __name__ == "__main__":
     main()
