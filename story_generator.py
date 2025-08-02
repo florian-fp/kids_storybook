@@ -139,22 +139,91 @@ class ImageGenerator:
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
     """
 
-    def __init__(self, model: str = "gpt-image-1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, api_key: Optional[str] = None):
-        self.model = model
+    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, story_content: str = "", api_key: Optional[str] = None):
+        self.image_model = image_model
+        self.text_model = text_model
         self.nb_images = nb_images
         self.size = size
         self.target_age = 3
+        self.story_content = story_content
         
         load_dotenv()
         self.api_key = os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable.")
         self.client = OpenAI(api_key=self.api_key)
+    
+
+    def get_image_prompts(self):
+        """Get the image prompts for the nb_images selected for the story by calling OpenAI text API to break down the story content into nb_images prompts"""
         
+        prompt = f"""
+        Break down the following story content into {self.nb_images} image prompts.
+        
+        # Guidelines:
+        Each prompt needs to respect the following guidelines:
+        - The images should capture evenly spaced moments of the story
+        - The images should be consistent in style and across characters. E.g., if a story character is used in several pictures, this character should look like the same character even if in different situations.
+        - Characters need to be described in details
+        - Style of images should be appropriate for a {self.target_age}-year-old
+        - Prompts need to be optimized for ChatGPT image generation
+        
+        # Story content: {self.story_content}
+        """
+        
+        # Define the function schema for structured table output
+        function_schema = {
+            "type": "function",
+            "function": {
+                "name": "create_image_prompts_table",
+                "description": "Create a table of image prompts for a children's story",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "image_prompts": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "image_number": {
+                                        "type": "integer",
+                                        "description": "The sequential number of the image (1, 2, 3, etc.)"
+                                    },
+                                    "prompt": {
+                                        "type": "string",
+                                        "description": "Detailed image generation prompt optimized for ChatGPT"
+                                    }
+                                },
+                                "required": ["image_number", "prompt"]
+                            },
+                            "description": f"Array of {self.nb_images} image prompts"
+                        }
+                    },
+                    "required": ["image_prompts"]
+                }
+            }
+        }
+        
+        response = self.client.chat.completions.create(
+            model=self.text_model,
+            messages=[{"role": "user", "content": prompt}],
+            tools=[function_schema],
+            tool_choice={"type": "function", "function": {"name": "create_image_prompts_table"}},
+            temperature=0.7,
+            max_tokens=1000
+        )
+        
+        # Extract the function call response
+        tool_call = response.choices[0].message.tool_calls[0]
+        image_prompts_data = json.loads(tool_call.function.arguments)
+        
+        return image_prompts_data
+            
+            
     def generate_image(self, prompt: str):
         """Generate an image based on the prompt."""
         image = self.client.images.generate(
-            model = self.model,
+            model = self.image_model,
             prompt = prompt,
             n = self.nb_images,
             size = self.size
@@ -169,7 +238,6 @@ class ImageGenerator:
 
         return image_bytes
 
-
 def main():
 
     try:
@@ -180,30 +248,41 @@ def main():
         - Where does the story take place: the city of San Francisco
         - Any special message or lesson: with determination, you can achieve anything you want in life
         """
-        print("\n=== Story Generation ===")
+        print("\n=== Story Generation ===\n")
         story_generator = StoryGenerator()
         story = story_generator.generate_story(USER_PROMPT)
         
         print("\n=== Successful Story Generation===\n")
-        print(f"Title:\n {story.get('title', 'Untitled')}\n")
-        print(f"Summary:\n {story.get('summary', 'No summary available')}\n")
-        print(f"Story content:\n {story.get('story_content', 'No story content available')}\n")
+        # print(f"Title:\n {story.get('title', 'Untitled')}\n")
+        # print(f"Summary:\n {story.get('summary', 'No summary available')}\n")
+        # print(f"Story content:\n {story.get('story_content', 'No story content available')}\n")
 
-        # # Generate an image
-        # IMAGE_PROMPT = "A picture of a cute golden retriever puppy running in space."
-        # print("\n=== Image Generation Example ===")
+        # Generate images prompts
+        print("\n=== Image Prompts Generation ===\n")
+        image_generator = ImageGenerator(story_content=story.get('story_content', 'No story content available'), nb_images=4)
+        image_prompts = image_generator.get_image_prompts()
+        print("\n=== Successful Image Prompts Generation ===\n")
+        # print("Image Prompts Table:")
+        # for prompt_data in image_prompts.get('image_prompts', []):
+        #     print(f"Image {prompt_data['image_number']}: {prompt_data['prompt']}")
+        #     print("---")
+
+        # # Generate images
         
-        # image_generator = ImageGenerator()
-        # image = image_generator.generate_image(IMAGE_PROMPT)
-        # print(f"\n=== Successful Image Generation ===")
+        print("\n=== Image Generation ===\n")
+        for image_prompt in image_prompts.get('image_prompts', []):
+            print(f"Generating image {image_prompt.get('image_number', 'No image number available')}")
+            print(f"Prompt: {image_prompt.get('prompt', 'No prompt available')}")
+            image = image_generator.generate_image(image_prompt.get('prompt', 'No prompt available'))
+        
+        print(f"\n=== Successful Image Generation ===")
 
     except (ValueError, OpenAIError) as e:
         print(f"Error: {e}")
     
     except Exception as e:
         print(f"Unexpected error: {e}")
-
-        
+       
 
 if __name__ == "__main__":
     main()
