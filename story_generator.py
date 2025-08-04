@@ -19,6 +19,8 @@ from dataclasses import dataclass
 
 import base64
 
+import gradio as gr
+
 class StoryGenerator:
     """Handles the generation of children's stories using OpenAI API."""
     
@@ -220,71 +222,116 @@ class ImageGenerator:
         return image_prompts_data
             
             
-    def generate_image(self, prompt: str):
+    def generate_image(self, image_number: int, prompt: str):
         """Generate an image based on the prompt."""
         image = self.client.images.generate(
             model = self.image_model,
             prompt = prompt,
             n = self.nb_images,
-            size = self.size
+            size = self.size,
+            quality = "low"
         )
 
         # Decode the base64 image data
         image_bytes = base64.b64decode(image.data[0].b64_json)
         
         # Save the image as output.png
-        with open("output.png", "wb") as f:
+        with open(f"output_{image_number}.png", "wb") as f:
             f.write(image_bytes)
 
         return image_bytes
 
-def main():
+def generate_story_and_images(user_prompt, nb_images):
+    """
+    Main function to generate story and images.
+    
+    Args:
+        user_prompt (str): The user's story prompt
+        nb_images (int): Number of images to generate (passed from display function)
+    """
+    TEXT_MODEL = "gpt-4.1"
+    MAX_WORDS = 50
+    READING_TIME_MINUTES = (2, 4)
+    TARGET_AGE = 3
+    IMAGE_MODEL = "gpt-image-1"
+    IMAGE_SIZE = "1024x1024"
 
     try:
-        # Generate a story
-        USER_PROMPT = """
-        - Main character: a little baby canary
-        - Adventure or challenge: the canary wants to fly all the way to the top of North Beach tower
-        - Where does the story take place: the city of San Francisco
-        - Any special message or lesson: with determination, you can achieve anything you want in life
-        """
-        print("\n=== Story Generation ===\n")
-        story_generator = StoryGenerator()
-        story = story_generator.generate_story(USER_PROMPT)
         
-        print("\n=== Successful Story Generation===\n")
-        # print(f"Title:\n {story.get('title', 'Untitled')}\n")
-        # print(f"Summary:\n {story.get('summary', 'No summary available')}\n")
-        # print(f"Story content:\n {story.get('story_content', 'No story content available')}\n")
-
+        print("\n=== NEW RUN ===\n")
+        
+        # Generate a story
+        story_generator = StoryGenerator(model=TEXT_MODEL, max_words=MAX_WORDS, reading_time_minutes=READING_TIME_MINUTES, target_age=TARGET_AGE)
+        story = story_generator.generate_story(user_prompt=user_prompt)
+    
         # Generate images prompts
-        print("\n=== Image Prompts Generation ===\n")
-        image_generator = ImageGenerator(story_content=story.get('story_content', 'No story content available'), nb_images=4)
+        image_generator = ImageGenerator(image_model=IMAGE_MODEL, text_model=TEXT_MODEL, nb_images=nb_images, size=IMAGE_SIZE, target_age=TARGET_AGE, story_content=story.get('story_content', 'No story content available'))
         image_prompts = image_generator.get_image_prompts()
-        print("\n=== Successful Image Prompts Generation ===\n")
-        # print("Image Prompts Table:")
-        # for prompt_data in image_prompts.get('image_prompts', []):
-        #     print(f"Image {prompt_data['image_number']}: {prompt_data['prompt']}")
-        #     print("---")
+        image_prompts_list = [prompt_data.get('prompt', '') for prompt_data in image_prompts.get('image_prompts', [])]
 
         # # Generate images
-        
-        print("\n=== Image Generation ===\n")
         for image_prompt in image_prompts.get('image_prompts', []):
-            print(f"Generating image {image_prompt.get('image_number', 'No image number available')}")
-            print(f"Prompt: {image_prompt.get('prompt', 'No prompt available')}")
-            image = image_generator.generate_image(image_prompt.get('prompt', 'No prompt available'))
-        
-        print(f"\n=== Successful Image Generation ===")
+            image_number = image_prompt.get('image_number', 1)
+            image = image_generator.generate_image(image_number=image_number, prompt=image_prompt.get('prompt', 'No prompt available'))
+
+        # Return Gradio output
+        output = [story.get("title", "Untitled"), story.get("summary", "No summary available"), story.get("story_content", "No story content available")]
+        for i in range(nb_images):
+            output.append(f"output_{i+1}.png")  # Image path (1-based indexing for files)
+            output.append(image_prompts_list[i])  # Prompt text
+        return tuple(output)
 
     except (ValueError, OpenAIError) as e:
         print(f"Error: {e}")
+        # Return default values for all outputs
+        default_output = ["Error occurred", "Error occurred", "Error occurred"]
+        for i in range(nb_images):
+            default_output.append(None)  # No image
+            default_output.append(f"Error: {e}")  # Error message as prompt
+        return tuple(default_output)
     
     except Exception as e:
         print(f"Unexpected error: {e}")
+        # Return default values for all outputs
+        default_output = ["Error occurred", "Error occurred", "Error occurred"]
+        for i in range(nb_images):
+            default_output.append(None)  # No image
+            default_output.append(f"Unexpected error: {e}")  # Error message as prompt
+        return tuple(default_output)
        
+def display(nb_images=5):
+    """
+    Create and launch a Gradio Interface for the story generator.
+    
+    Args:
+        nb_images (int): Number of images to generate and display
+    """
+    def main_wrapper(user_prompt):
+        """Wrapper function that passes nb_images to main function"""
+        return generate_story_and_images(user_prompt, nb_images)
+    
+    demo = gr.Interface(
+        fn=main_wrapper,
+        inputs=[
+            gr.Textbox(label="USER_PROMPT", placeholder="Describe what you would like to see in your story", lines=4)
+        ],
+        outputs=[
+            gr.Textbox(label="Title", interactive=False),
+            gr.Textbox(label="Summary", interactive=False, lines=2),
+            gr.Textbox(label="Story", interactive=False, lines=8),
+        ] + [component for i in range(nb_images) for component in [
+            gr.Image(label=f"Generated Image {i}"),
+            gr.Textbox(label=f"Image Prompt {i}", interactive=False, lines=2)
+        ]],
+        title="Children's Story Generator"
+    )
+    demo.launch()
+
+# Launch the interface with default settings
+
+NB_IMAGES = 3
 
 if __name__ == "__main__":
-    main()
+    display(nb_images=NB_IMAGES)
 
 
