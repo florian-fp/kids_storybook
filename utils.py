@@ -37,3 +37,10 @@ def create_success_output(story: dict, nb_images: int, image_prompts_list: List[
         output.append(image_prompts_list[i] if i < len(image_prompts_list) else "No prompt available")  # Prompt text
     
     return tuple(output) 
+
+
+def create_success_output_dictionnary(story: dict, nb_images: int, image_prompts_list: List[str]) -> dict:
+    """Create standardized success output for the interface."""
+    output = story.copy()
+    output['images'] = [f"images/output_{i+1}.png" for i in range(nb_images)]
+    return output

@@ -72,23 +72,14 @@ class ImageGenerator:
         image = self.client.images.generate(
             model = self.image_model,
             prompt = prompt,
-            n = self.nb_images,
+            n = self.nb_images, 
             size = self.size,
             quality = "low"
         )
 
         # Decode the base64 image data
         image_bytes = base64.b64decode(image.data[0].b64_json)
-        
-        # Create images directory if it doesn't exist
-        try:
-            os.makedirs(IMAGES_DIR, exist_ok=True)
-        except FileExistsError:
-            # If 'images' exists as a file, remove it and create directory
-            if os.path.isfile(IMAGES_DIR):
-                os.remove(IMAGES_DIR)
-                os.makedirs(IMAGES_DIR, exist_ok=True)
-        
+
         # Save the image as output.png
         with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
             f.write(image_bytes)

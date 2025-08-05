@@ -5,12 +5,13 @@ Story and Image Generator - Orchestrates story and image generation
 
 from story_generator import StoryGenerator
 from image_generator import ImageGenerator
-from utils import add_rate_limiting_delay, create_error_output, create_success_output
-from config import IMAGE_GENERATION_DELAY
+from utils import add_rate_limiting_delay, create_error_output, create_success_output, create_success_output_dictionnary
+from config import IMAGE_GENERATION_DELAY, IMAGES_DIR
 from openai import OpenAIError
+import os
 
 
-def generate_story_and_images(user_prompt, nb_images, text_model, max_words, reading_time_minutes, target_age, image_model, image_size):
+def generate_story_and_images(user_prompt, nb_images, text_model, max_words, reading_time_minutes, target_age, image_model, image_size, output_format="gradio"):
     """
     Main function to generate story and images.
     
@@ -51,6 +52,14 @@ def generate_story_and_images(user_prompt, nb_images, text_model, max_words, rea
         image_prompts = image_generator.get_image_prompts()
         image_prompts_list = [prompt_data.get('prompt', '') for prompt_data in image_prompts.get('image_prompts', [])]
 
+
+        # Store all images in a new image directory
+        if os.path.exists(IMAGES_DIR):
+            os.system(f"rm -rf {IMAGES_DIR}")
+        
+        os.makedirs(IMAGES_DIR, exist_ok=True)
+
+
         # Generate images
         for image_prompt in image_prompts.get('image_prompts', []):
             add_rate_limiting_delay(IMAGE_GENERATION_DELAY)  # Use configurable delay
@@ -60,8 +69,13 @@ def generate_story_and_images(user_prompt, nb_images, text_model, max_words, rea
                 prompt=image_prompt.get('prompt', 'No prompt available')
             )
 
-        # Return Gradio output using utility function
-        return create_success_output(story, nb_images, image_prompts_list)
+        if output_format == "gradio":
+            # Return tuple useful for Gradio interface
+            return create_success_output(story, nb_images, image_prompts_list)
+        elif output_format == "dictionnary":
+            # Return a dictionnary with the story, the images and the image prompts more useful for formatting purposes
+            return create_success_output_dictionnary(story, nb_images, image_prompts_list)
+
 
     except (ValueError, OpenAIError) as e:
         print(f"Error: {e}")
