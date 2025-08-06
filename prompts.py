@@ -22,7 +22,7 @@ USER_PROMPT_TEMPLATE = "Make sure this story includes the following: {user_promp
 
 # Image generation prompts
 IMAGE_PROMPT_BREAKDOWN = """
-Break down the following story content into {total_images} image prompts. The first image prompt is for the title page and the other {nb_images} image prompts are for the story content.
+Break down the following story content into {total_images} image prompts. The first image prompt is for the title page, the middle {nb_images} image prompts are for the story content, and the last image prompt is for "The End" page.
 
 # Guidelines:
 Each prompt needs to respect the following guidelines:
@@ -31,6 +31,7 @@ Each prompt needs to respect the following guidelines:
 - Characters need to be described in details
 - Style of images should be appropriate for a {target_age}-year-old
 - Prompts need to be optimized for ChatGPT image generation
+- The "The End" page should be a celebratory, happy ending image that captures the story's conclusion
 
 # Story title: {title}
 # Story content: {story_content}
@@ -94,6 +95,7 @@ CREATE_IMAGE_PROMPTS_SCHEMA = {
         }
     }
 } 
+
 
 # Standard page HTML template
 STORY_STANDARD_TEMPLATE = """
@@ -195,6 +197,8 @@ STORY_STANDARD_TEMPLATE = """
 
 # Title page HTML template for kid's book cover
 STORY_TITLE_TEMPLATE = """
+
+
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -305,3 +309,6 @@ STORY_TITLE_TEMPLATE = """
     </body>
     </html>
     """
+
+
+    # "The End" page HTML template

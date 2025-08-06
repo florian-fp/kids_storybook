@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # }
 
     story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, MAX_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
-    print(f"story_dict: {story_dict}")
+    # print(f"story_dict: {story_dict}")
 
     formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
     formatter.build_storybook()

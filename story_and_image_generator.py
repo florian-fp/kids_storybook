@@ -49,7 +49,7 @@ def generate_story_and_images(user_prompt, text_model, max_words, target_age, im
         else:
             words_per_image = WORDS_PER_IMAGE_AGES_7_PLUS  # Fewer images for older children (7+)
         
-        nb_images = max(1, word_count // words_per_image)
+        nb_images = max(1, word_count // words_per_image) + 1  # +1 for remaining words
         print(f"📊 Story has {word_count} words. Generating {nb_images} content images with {words_per_image} words per image for target age {target_age}")
     
         # Generate images prompts

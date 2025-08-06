@@ -29,10 +29,10 @@ class StorybookFormatter:
         
         # Calculate nb_pages from the number of images if not provided
         if nb_pages is None:
-            # Number of pages = number of images - 1 (excluding title page)
+            # Number of pages = number of images - 2 (excluding title and "The End" pages)
             total_images = len(self.story_dict.get('images', []))
-            self.nb_pages = total_images - 1
-            print(f"📄 Calculated {self.nb_pages} content pages from {total_images} total images")
+            self.nb_pages = total_images - 2
+            print(f"📄 Calculated {self.nb_pages} content pages from {total_images} total images (title + content + 'The End')")
         else:
             self.nb_pages = nb_pages
 
@@ -72,6 +72,13 @@ class StorybookFormatter:
                 'image': self.story_dict['images'][page_number]
             }
             story_pages[page_number] = page_content
+        
+        # Add the "The End" page
+        end_page_content = {
+            'text': 'The End',
+            'image': self.story_dict['images'][self.nb_pages+1]
+        }
+        story_pages[self.nb_pages+1] = end_page_content
 
         return story_pages
 
@@ -106,25 +113,33 @@ class StorybookFormatter:
         rendered_pages.append(page_html)
         
         # Save title page
-        with open(f"{HTML_DIR}/storybook_html_page_{page_number+1}.html", 'w', encoding='utf-8') as f:
+        with open(f"{HTML_DIR}/storybook_html_page_{page_number}.html", 'w', encoding='utf-8') as f:
             f.write(page_html)
+        print(f"Title page saved to {HTML_DIR}/storybook_html_page_{page_number}.html")
 
         # Create the main story pages
-        template_standard = Template(STORY_STANDARD_TEMPLATE)
         for page_number in sorted(story_pages.keys()):
-
-            # Render HTML for each page
+            if page_number == 0:  # Skip title page, already handled
+                continue
+            
             content = story_pages[page_number]
+            
+            # Regular content page
+            template_standard = Template(STORY_STANDARD_TEMPLATE)
             page_html = template_standard.render(
                 text=content['text'], 
-                image=content['image'], 
+                image=content['image'],
                 page_width=self.format_options['page_size_width'], 
                 page_height=self.format_options['page_size_height']
             )
+            
             rendered_pages.append(page_html)
-
+            
             with open(f"{HTML_DIR}/storybook_html_page_{page_number}.html", 'w', encoding='utf-8') as f:
                 f.write(page_html)
+            if page_number == self.nb_pages + 1:  # "The End" page
+                print(f"Creating 'The End' page with text: {content['text']}")
+            print(f"Page {page_number} saved to {HTML_DIR}/storybook_html_page_{page_number}.html")
     
     def build_pdf(self):
         """Build PDF for all pages
@@ -141,7 +156,7 @@ class StorybookFormatter:
         
         os.makedirs(PDF_DIR, exist_ok=True)
 
-        for page_number in range(self.nb_pages+1):
+        for page_number in range(self.nb_pages+2):  # +2 for title and "The End" pages
             try:
                 HTML(string=f"{HTML_DIR}/storybook_html_page_{page_number}.html", base_url=os.getcwd()).write_pdf(
                     f"{PDF_DIR}/storybook_pdf_page_{page_number}.pdf",
@@ -166,7 +181,7 @@ class StorybookFormatter:
             merger = PdfMerger()
             
             # Add each page PDF to the merger
-            for page_number in range(self.nb_pages+1):
+            for page_number in range(self.nb_pages+2):  # +2 for title and "The End" pages
                 pdf_path = f"{PDF_DIR}/storybook_pdf_page_{page_number}.pdf"
                 if os.path.exists(pdf_path):
                     merger.append(pdf_path)

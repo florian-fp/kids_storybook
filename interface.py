@@ -14,8 +14,8 @@ def generate_story_and_images_gradio(user_prompt, text_model, max_words, target_
     result = generate_story_and_images(user_prompt, text_model, max_words, target_age, image_model, image_size, output_format="gradio")
     
     # Ensure we return the correct number of outputs for the interface
-    # The interface expects: 3 story outputs + (NB_IMAGES_MAX+1) * 2 image outputs
-    expected_outputs = 3 + (NB_IMAGES_MAX + 1) * 2
+    # The interface expects: 3 story outputs + (NB_IMAGES_MAX+2) * 2 image outputs (title + content + "The End")
+    expected_outputs = 3 + (NB_IMAGES_MAX + 2) * 2
     
     if len(result) < expected_outputs:
         # Pad with None values if we don't have enough outputs
@@ -37,13 +37,13 @@ def create_interface():
             gr.Slider(label="Max Words", value=MAX_WORDS, minimum=50, maximum=1500, step=50),
             gr.Slider(label="Target Age", value=TARGET_AGE, minimum=3, maximum=8, step=1),
             gr.Dropdown(label="Image Model", choices=["gpt-image-1", "dall-e-3", "dall-e-2"], value=IMAGE_MODEL),
-            gr.Dropdown(label="Image Size", choices=["1024x1024", "1792x1024", "1024x1792", "1024x1024", "512x512", "256x256"], value=IMAGE_SIZE),
+            gr.Dropdown(label="Image Size", choices=["1024x1536", "1024x1024", "1536x1024", "auto"], value=IMAGE_SIZE),
         ],
         outputs=[
             gr.Textbox(label="Title", interactive=False),
             gr.Textbox(label="Summary", interactive=False, lines=2),
             gr.Textbox(label="Story Content", interactive=False, lines=8),
-        ] + [component for i in range(NB_IMAGES_MAX+1) for component in [
+        ] + [component for i in range(NB_IMAGES_MAX+2) for component in [
             gr.Image(label=f"Generated Image {i}"),
             gr.Textbox(label=f"Image Prompt {i}", interactive=False, lines=2)
         ]],

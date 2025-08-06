@@ -45,7 +45,7 @@ class ImageGenerator:
         """Get the image prompts for the nb_images selected for the story by calling OpenAI text API to break down the story content into nb_images prompts"""
         
         prompt = IMAGE_PROMPT_BREAKDOWN.format(
-            total_images=self.nb_images + 1,  # +1 for title page
+            total_images=self.nb_images + 2,  # +1 for title page + 1 for "The End" page
             nb_images=self.nb_images,
             target_age=self.target_age,
             title=self.title,
