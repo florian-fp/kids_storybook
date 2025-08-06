@@ -4,15 +4,19 @@ Configuration file for the Children's Storybook Generator
 """
 
 # Story generation settings
-MAX_WORDS = 500
-READING_TIME_MINUTES = 5
+MAX_WORDS = 200
 TARGET_AGE = 3
 TEXT_MODEL = "gpt-4.1"  # only OpenAI models are supported for now
 
 # Image generation settings
-NB_IMAGES = 10
+NB_IMAGES_MAX = 15
 IMAGE_MODEL = "gpt-image-1"  # only OpenAI models are supported for now
 IMAGE_SIZE = "1024x1024"
+
+# Age-based words per image settings
+WORDS_PER_IMAGE_AGES_3_4 = 25    # More images for younger children (3-4 years)
+WORDS_PER_IMAGE_AGES_5_6 = 50    # Medium images for 5-6 year olds
+WORDS_PER_IMAGE_AGES_7_PLUS = 75  # Fewer images for older children (7+ years)
 
 # Storybook formatting settings
 FORMAT_OPTIONS = {

@@ -31,16 +31,16 @@ def create_success_output(story: dict, nb_images: int, image_prompts_list: List[
         story.get("story_content", "No story content available")
     ]
     
-    # Add image outputs (match the number of images requested)
-    for i in range(nb_images):
-        output.append(f"images/output_{i+1}.png")  # Image path
+    # Add image outputs (match the number of images requested + 1 for title page)
+    for i in range(nb_images + 1):
+        output.append(f"images/output_{i}.png")  # Image path (0-based indexing)
         output.append(image_prompts_list[i] if i < len(image_prompts_list) else "No prompt available")  # Prompt text
-    
+    print(f"output: {output}")
     return tuple(output) 
 
 
 def create_success_output_dictionnary(story: dict, nb_images: int, image_prompts_list: List[str]) -> dict:
     """Create standardized success output for the interface."""
     output = story.copy()
-    output['images'] = [f"images/output_{i+1}.png" for i in range(nb_images)]
+    output['images'] = [f"images/output_{i}.png" for i in range(nb_images+1)]
     return output

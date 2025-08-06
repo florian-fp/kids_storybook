@@ -17,7 +17,7 @@ from utils import add_rate_limiting_delay, create_error_output, create_success_o
 class StoryGenerator:
     """Handles the generation of children's stories using OpenAI API."""
     
-    def __init__(self, model: str = "gpt-4.1", max_words: int = 150, reading_time_minutes: int = 3, target_age: int = 3, api_key: Optional[str] = None):
+    def __init__(self, model: str = "gpt-4.1", max_words: int = 150, target_age: int = 3, api_key: Optional[str] = None):
         """
         Initialize the story generator.
         
@@ -25,13 +25,11 @@ class StoryGenerator:
             api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
             model: OpenAI model to be used
             max_words: maximum number of words in the story
-            reading_time_minutes: reading time in minutes
             target_age: target age group for the story
         """
 
         self.model = model
         self.max_words = max_words
-        self.reading_time_minutes = reading_time_minutes
         self.target_age = target_age
         
         # No prompt manager needed - using simple imports
@@ -46,8 +44,7 @@ class StoryGenerator:
         """Generate the base prompt for story creation."""
         return STORY_BASE_PROMPT.format(
             target_age=self.target_age,
-            max_words=self.max_words,
-            reading_time_minutes=self.reading_time_minutes
+            max_words=self.max_words
         )
     
     def generate_story(self, user_prompt: str) -> Dict[str, str]:

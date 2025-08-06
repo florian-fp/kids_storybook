@@ -10,14 +10,31 @@ from weasyprint import HTML
 import os
 
 import webbrowser
-from config import IMAGE_GENERATION_DELAY, IMAGE_MODEL, IMAGE_SIZE, MAX_WORDS, READING_TIME_MINUTES, TARGET_AGE, TEXT_MODEL, NB_IMAGES, HTML_DIR, PDF_DIR
-from prompts import STORY_STANDARD_TEMPLATE
+from config import IMAGE_GENERATION_DELAY, IMAGE_MODEL, IMAGE_SIZE, MAX_WORDS, TARGET_AGE, TEXT_MODEL, NB_IMAGES_MAX, HTML_DIR, PDF_DIR
+from prompts import STORY_STANDARD_TEMPLATE, STORY_TITLE_TEMPLATE
+
+# Try to import PyPDF2 for PDF merging, fallback to pypdf if not available
+try:
+    from PyPDF2 import PdfMerger
+except ImportError:
+    try:
+        from pypdf import PdfMerger
+    except ImportError:
+        PdfMerger = None
 
 class StorybookFormatter:
-    def __init__(self, story_dict, nb_pages, format_options):
+    def __init__(self, story_dict, format_options, nb_pages=None):
         self.story_dict = story_dict
-        self.nb_pages = nb_pages
         self.format_options = format_options
+        
+        # Calculate nb_pages from the number of images if not provided
+        if nb_pages is None:
+            # Number of pages = number of images - 1 (excluding title page)
+            total_images = len(self.story_dict.get('images', []))
+            self.nb_pages = total_images - 1
+            print(f"📄 Calculated {self.nb_pages} content pages from {total_images} total images")
+        else:
+            self.nb_pages = nb_pages
 
     def break_story_into_pages(self):
         """
@@ -33,23 +50,29 @@ class StorybookFormatter:
         # Split the story text into sentences
         sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])'
         sentences = re.split(sentence_pattern, self.story_dict['story_content'])
-        nb_sentences_per_page = round(len(sentences) / self.nb_pages)
+        
+        if len(sentences) % self.nb_pages == 0:
+            nb_sentences_per_page = (round(len(sentences) / self.nb_pages))
+        else:
+            nb_sentences_per_page = (round(len(sentences) / self.nb_pages)) + 1
 
-        for page_number in range(self.nb_pages-1):
+        # Create the title page
+        title_page_content = {
+            'text': self.story_dict['title'],
+            'image': self.story_dict['images'][0]
+        }
+        story_pages[0] = title_page_content
+
+        # Create each page content
+        for page_number in range(1, self.nb_pages+1):
             # Evenly split the sentences across the pages
-            page_sentences = sentences[page_number * nb_sentences_per_page:(page_number + 1) * nb_sentences_per_page]
+            page_sentences = sentences[(page_number-1) * nb_sentences_per_page:(page_number) * nb_sentences_per_page]
             page_content = {
                 'text': '. '.join(page_sentences),
                 'image': self.story_dict['images'][page_number]
             }
             story_pages[page_number] = page_content
 
-        story_pages[self.nb_pages-1] = {
-            'text': '. '.join(sentences[(self.nb_pages-1) * nb_sentences_per_page:]),
-            'image': self.story_dict['images'][self.nb_pages-1]
-        }
-
-        # print(f"Broke down story text into: {len(story_pages)} pages")
         return story_pages
 
     def build_html(self, story_pages):
@@ -63,30 +86,44 @@ class StorybookFormatter:
         """
 
         rendered_pages = []
-        template = Template(STORY_STANDARD_TEMPLATE)
 
         # Store all HTML rendered pages in a directory
         if os.path.exists(HTML_DIR):
             os.system(f"rm -rf {HTML_DIR}")
-            # print(f"Deleted existing directory: {HTML_DIR}")
         
         os.makedirs(HTML_DIR, exist_ok=True)
-        # print(f"Created new directory: {HTML_DIR}")
 
+        # Create the title page
+        page_number = 0
+        content = story_pages[page_number]
+        template_title = Template(STORY_TITLE_TEMPLATE)
+        page_html = template_title.render(
+            text=content['text'], 
+            image=content['image'],
+            page_width=self.format_options['page_size_width'], 
+            page_height=self.format_options['page_size_height']
+        )
+        rendered_pages.append(page_html)
+        
+        # Save title page
+        with open(f"{HTML_DIR}/storybook_html_page_{page_number+1}.html", 'w', encoding='utf-8') as f:
+            f.write(page_html)
+
+        # Create the main story pages
+        template_standard = Template(STORY_STANDARD_TEMPLATE)
         for page_number in sorted(story_pages.keys()):
 
             # Render HTML for each page
             content = story_pages[page_number]
-            page_html = template.render(
+            page_html = template_standard.render(
                 text=content['text'], 
                 image=content['image'], 
                 page_width=self.format_options['page_size_width'], 
                 page_height=self.format_options['page_size_height']
             )
             rendered_pages.append(page_html)
-            # print(f"Page {page_number} rendered with HTML")
 
-            with open(f"{HTML_DIR}/storybook_html_page_{page_number+1}.html", 'w', encoding='utf-8') as f:
+            with open(f"{HTML_DIR}/storybook_html_page_{page_number}.html", 'w', encoding='utf-8') as f:
                 f.write(page_html)
     
     def build_pdf(self):
@@ -101,29 +138,51 @@ class StorybookFormatter:
         # Store all PDF rendered pages in a directory
         if os.path.exists(PDF_DIR):
             os.system(f"rm -rf {PDF_DIR}")
-            # print(f"Deleted existing directory: {PDF_DIR}")
         
         os.makedirs(PDF_DIR, exist_ok=True)
-        # print(f"Created new directory: {PDF_DIR}")
 
-        for page_number in range(self.nb_pages):
+        for page_number in range(self.nb_pages+1):
             try:
-                # Read the HTML file content
-                html_file_path = f"{HTML_DIR}/storybook_html_page_{page_number+1}.html"
-                with open(html_file_path, 'r', encoding='utf-8') as f:
-                    html_content = f.read()
-                
-                # Generate PDF from HTML content
-                HTML(string=html_content, base_url=os.getcwd()).write_pdf(
-                    f"{PDF_DIR}/storybook_pdf_page_{page_number+1}.pdf",
+                HTML(string=f"{HTML_DIR}/storybook_html_page_{page_number}.html", base_url=os.getcwd()).write_pdf(
+                    f"{PDF_DIR}/storybook_pdf_page_{page_number}.pdf",
                     stylesheets=[],
                     presentational_hints=True
                 )
-                print(f"PDF saved to {PDF_DIR}/storybook_pdf_page_{page_number+1}.pdf")
 
             except Exception as e:
                 print(f"Error creating PDF: {e}")
                 return False
+
+    def merge_pdfs(self, output_filename="storybook.pdf"):
+        """Merge individual PDF pages into a single storybook PDF
+        
+        Args:
+            output_filename: Name of the output merged PDF file
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """         
+        try:
+            merger = PdfMerger()
+            
+            # Add each page PDF to the merger
+            for page_number in range(self.nb_pages+1):
+                pdf_path = f"{PDF_DIR}/storybook_pdf_page_{page_number}.pdf"
+                if os.path.exists(pdf_path):
+                    merger.append(pdf_path)
+                else:
+                    print(f"Warning: Page {page_number} PDF not found at {pdf_path}")
+            
+            # Write the merged PDF
+            output_path = f"{PDF_DIR}/{output_filename}"
+            merger.write(output_path)
+            merger.close()
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error merging PDFs: {e}")
+            return False
 
     def build_storybook(self):
         """Build the storybook
@@ -141,32 +200,13 @@ class StorybookFormatter:
         # Build HTML of each page
         self.build_html(story_pages)
         
-        # # Convert HTML to PDF
+        # Convert HTML to PDF
         self.build_pdf()
+        
+        # Merge individual PDFs into a single storybook
+        self.merge_pdfs()
 
-        print(f"Storybook built")
+        print(f"✅ Storybook PDF generated")
 
 
-def test():
-    """Test the StorybookFormatter with sample data"""
     
-    # Test data in dictionary format
-    story_dict = {
-        "title": "Benny the Bubble's Adventure",
-        "summary": "A magical bubble learns to fly and explore the world",
-        "story_content": "Benny the bubble was born in a bathtub. He was small, shiny, and full of dreams. \"I want to fly!\" he said with a giggle. A gentle breeze carried him out the window, over trees, rooftops, and a surprised cat! \"Wheee!\" Benny sang, swirling with butterflies and dancing with dandelions. But POP!—a bird nearly bumped him. \"Careful!\" Benny laughed, bouncing higher. As the sun began to set, Benny sparkled like a tiny rainbow. Finally, he gently landed on a little girl's nose. She giggled, and Benny smiled, proud to have flown so far. And with a pop, he was gone.",
-        "images": ["images/output_1.png", "images/output_2.png", "images/output_3.png", "images/output_4.png", "images/output_5.png"]
-    }
-    
-    NB_PAGES = 5
-    
-    # Import format options from config
-    from config import FORMAT_OPTIONS
-
-    # Create formatter and build storybook
-    formatter = StorybookFormatter(story_dict, NB_PAGES, FORMAT_OPTIONS)
-    formatter.build_storybook()
-
-
-if __name__ == "__main__":
-    test()

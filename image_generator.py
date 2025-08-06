@@ -26,12 +26,13 @@ class ImageGenerator:
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
     """
 
-    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, story_content: str = "", api_key: Optional[str] = None):
+    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", api_key: Optional[str] = None):
         self.image_model = image_model
         self.text_model = text_model
         self.nb_images = nb_images
         self.size = size
         self.target_age = target_age
+        self.title = title
         self.story_content = story_content
         
         load_dotenv()
@@ -44,10 +45,13 @@ class ImageGenerator:
         """Get the image prompts for the nb_images selected for the story by calling OpenAI text API to break down the story content into nb_images prompts"""
         
         prompt = IMAGE_PROMPT_BREAKDOWN.format(
+            total_images=self.nb_images + 1,  # +1 for title page
             nb_images=self.nb_images,
             target_age=self.target_age,
+            title=self.title,
             story_content=self.story_content
         )
+
         
         # Use function schema from prompts module
         function_schema = CREATE_IMAGE_PROMPTS_SCHEMA
