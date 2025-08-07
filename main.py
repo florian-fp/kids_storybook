@@ -3,6 +3,11 @@
 Main entry point for the Children's Storybook Generator
 """
 
+import sys
+sys.path.append('gradio_interface')
+sys.path.append('story_and_image_gen')
+sys.path.append('book_format')
+
 from interface import launch_interface
 from story_and_image_generator import generate_story_and_images
 from formatting import StorybookFormatter
@@ -12,10 +17,13 @@ if __name__ == "__main__":
     # 1. Gradio interface - useful for reviewing story and images
     # launch_interface() 
 
-    # 2. PDF generation - useful for reviewing final formating 
+    # # 2. PDF generation - useful for reviewing final formating 
 
-    USER_PROMPT = "A story about a rhino who wants to be a giraffe"
-    
+    USER_PROMPT = "a golden retriever that wanted to eat the biggest steak in the world"
+    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, MAX_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
+    formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
+    formatter.build_storybook()
+
     # Test data in dictionary format
     # story_dict = {
     #     "title": "Benny the Bubble's Adventure",
@@ -24,8 +32,4 @@ if __name__ == "__main__":
     #     "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png", "images/output_4.png", "images/output_5.png"]
     # }
 
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, MAX_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
-    # print(f"story_dict: {story_dict}")
-
-    formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
-    formatter.build_storybook()
+    

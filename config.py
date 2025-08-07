@@ -4,7 +4,7 @@ Configuration file for the Children's Storybook Generator
 """
 
 # Story generation settings
-MAX_WORDS = 30
+MAX_WORDS = 50
 TARGET_AGE = 3
 TEXT_MODEL = "gpt-4.1"  # only OpenAI models are supported for now
 

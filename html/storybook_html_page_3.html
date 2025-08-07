@@ -1,0 +1,92 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @page {
+                size: 1536px 1024px;
+                margin: 0;
+            }
+            
+            body {
+                width: 1536px;
+                height: 1024px;
+                margin: 0;
+                padding: 0;
+                font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Arial", sans-serif;
+                box-sizing: border-box;
+                page-break-after: always;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .page-container {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                background-color: #f0f8ff; /* Light blue background fallback */
+            }
+
+            .background-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 1;
+            }
+
+            .text-overlay {
+                position: absolute;
+                bottom: 1.5in;
+                left: 1in;
+                right: 1in;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 0.75in;
+                border-radius: 0.5in;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                z-index: 2;
+                border: 3px solid #ff6b6b;
+            }
+
+            .text {
+                font-size: 24px;
+                line-height: 1.4;
+                color: #2c3e50;
+                text-align: center;
+                font-weight: bold;
+                margin: 0;
+                text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+            }
+
+            /* Fallback for when no image is provided */
+            .no-image {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 18px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-container">
+            
+            <img src="images/output_3.png" class="background-image" alt="Story illustration" />
+            
+            
+            
+            <div class="text-overlay">
+                <div class="text">The End</div>
+            </div>
+            
+        </div>
+    </body>
+    </html>
+    
