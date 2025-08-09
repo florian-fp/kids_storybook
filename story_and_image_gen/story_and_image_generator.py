@@ -10,17 +10,17 @@ from config import IMAGE_GENERATION_DELAY, IMAGES_DIR, WORDS_PER_IMAGE_AGES_3_4,
 from openai import OpenAIError
 import os
 
-def generate_story_and_images(user_prompt, text_model, max_words, target_age, image_model, image_size, output_format="gradio"):
+def generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, output_format="gradio"):
     """
     Main function to generate story and images.
     
-    Args:
-        user_prompt (str): The user's story prompt
-        text_model (str): OpenAI model for text generation
-        max_words (int): Maximum words for the story
-        target_age (int): Target age group
-        image_model (str): OpenAI model for image generation
-        image_size (str): Size of generated images
+            Args:
+            user_prompt (str): The user's story prompt
+            text_model (str): OpenAI model for text generation
+            target_words (int): Target words for the story
+            target_age (int): Target age group
+            image_model (str): OpenAI model for image generation
+            image_size (str): Size of generated images
     
     Returns:
         tuple: Formatted output for Gradio interface or dictionnary for PDF generation
@@ -31,7 +31,7 @@ def generate_story_and_images(user_prompt, text_model, max_words, target_age, im
         # Generate a story
         story_generator = StoryGenerator(
             model=text_model, 
-            max_words=max_words, 
+            target_words=target_words, 
             target_age=target_age
         )
         story = story_generator.generate_story(user_prompt=user_prompt)

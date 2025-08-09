@@ -3,39 +3,7 @@
 Simple prompt storage for Story Generator
 """
 
-# Story generation prompts
-STORY_BASE_PROMPT = """
-Write a children's storybook for a {target_age}-year-old. The story should be:
-- Wholesome, imaginative, and age-appropriate
-- Written in simple yet rich language that is easy for a parent to read aloud
-- Maximum {max_words} words
-- Should include repetition, rhyme, and sound play when possible
-- Structured with clear beginning, middle, and end
-- Featuring a fun and relatable main character (like a talking animal, toy, or curious child)
-- Centered around an engaging and magical adventure that teaches a gentle life lesson (like kindness, courage, friendship, or curiosity)
-- Include vivid descriptions to inspire illustration ideas (e.g., "a glowing rainbow bridge made of jellybeans")
-- Add a short, one-sentence title and a 1–2 sentence summary at the beginning
-- Provide the output as a JSON with title, summary, and story content. Story content should only include the story, not the title or summary.
-"""
 
-USER_PROMPT_TEMPLATE = "Make sure this story includes the following: {user_prompt}"
-
-# Image generation prompts
-IMAGE_PROMPT_BREAKDOWN = """
-Break down the following story content into {total_images} image prompts. The first image prompt is for the title page, the middle {nb_images} image prompts are for the story content, and the last image prompt is for "The End" page.
-
-# Guidelines:
-Each prompt needs to respect the following guidelines:
-- The images should capture evenly spaced moments of the story
-- The images should be consistent in style and across characters. E.g., if a story character is used in several pictures, this character should look like the same character even if in different situations.
-- Characters need to be described in details
-- Style of images should be appropriate for a {target_age}-year-old
-- Prompts need to be optimized for ChatGPT image generation
-- The "The End" page should be a celebratory, happy ending image that captures the story's conclusion
-
-# Story title: {title}
-# Story content: {story_content}
-"""
 
 # Function schemas
 CREATE_STORY_SCHEMA = {

@@ -10,7 +10,7 @@ from weasyprint import HTML
 import os
 
 import webbrowser
-from config import IMAGE_GENERATION_DELAY, IMAGE_MODEL, IMAGE_SIZE, MAX_WORDS, TARGET_AGE, TEXT_MODEL, NB_IMAGES_MAX, HTML_DIR, PDF_DIR
+from config import IMAGE_GENERATION_DELAY, IMAGE_MODEL, IMAGE_SIZE, TARGET_WORDS, TARGET_AGE, TEXT_MODEL, NB_IMAGES_MAX, HTML_DIR, PDF_DIR
 from prompts import STORY_STANDARD_TEMPLATE, STORY_TITLE_TEMPLATE
 
 # Try to import PyPDF2 for PDF merging, fallback to pypdf if not available

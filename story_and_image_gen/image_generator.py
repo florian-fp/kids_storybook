@@ -11,7 +11,8 @@ import base64
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
-from prompts import IMAGE_PROMPT_BREAKDOWN, CREATE_IMAGE_PROMPTS_SCHEMA
+from story_prompts import IMAGE_PROMPT_BREAKDOWN
+from prompts import CREATE_IMAGE_PROMPTS_SCHEMA
 from config import API_KEY_ENV_VAR, IMAGES_DIR
 
 

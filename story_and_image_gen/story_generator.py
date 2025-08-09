@@ -10,26 +10,36 @@ import json
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI, OpenAIError
-from prompts import STORY_BASE_PROMPT, USER_PROMPT_TEMPLATE, CREATE_STORY_SCHEMA
+
+import sys
+import os
+
+# Add parent directory to path to access config and other modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+from story_prompts import STORY_BASE_PROMPT, USER_PROMPT_TEMPLATE, CREATE_STORY_SCHEMA
 from config import API_KEY_ENV_VAR
 from utils import add_rate_limiting_delay, create_error_output, create_success_output
+
 
 class StoryGenerator:
     """Handles the generation of children's stories using OpenAI API."""
     
-    def __init__(self, model: str = "gpt-4.1", max_words: int = 150, target_age: int = 3, api_key: Optional[str] = None):
+    def __init__(self, model: str = "gpt-4.1", target_words: int = 150, target_age: int = 3, api_key: Optional[str] = None):
         """
         Initialize the story generator.
         
         Args:
             api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
             model: OpenAI model to be used
-            max_words: maximum number of words in the story
+            target_words: target number of words in the story
             target_age: target age group for the story
         """
 
         self.model = model
-        self.max_words = max_words
+        self.target_words = target_words
         self.target_age = target_age
         
         # No prompt manager needed - using simple imports
@@ -44,7 +54,7 @@ class StoryGenerator:
         """Generate the base prompt for story creation."""
         return STORY_BASE_PROMPT.format(
             target_age=self.target_age,
-            max_words=self.max_words
+            target_words=self.target_words
         )
     
     def generate_story(self, user_prompt: str) -> Dict[str, str]:
@@ -63,6 +73,8 @@ class StoryGenerator:
                 self._get_base_prompt() + 
                 "\n" + USER_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
             )
+            
+            print(f"Consolidated prompt: {consolidated_prompt}")
             
             # Use function schema from prompts module
             function_schema = CREATE_STORY_SCHEMA
@@ -88,3 +100,22 @@ class StoryGenerator:
             raise OpenAIError(f"Error generating story: {e}")
         except Exception as e:
             raise ValueError(f"Unexpected error during story generation: {e}")
+
+
+
+def test():
+    story_generator = StoryGenerator()
+    USER_PROMPT = """
+    - Main character: xxx
+    - Supporting characters: xxx
+    - Setting: xxx
+    - Plot elements: xxx
+    - Tone & Style: xxx
+    - Language: xxx
+    - Tone: xxx
+    - Vocabulary: xxx   
+    """
+    story_data = story_generator.generate_story(USER_PROMPT)
+    print(story_data)
+
+test()

@@ -11,7 +11,7 @@ sys.path.append('book_format')
 from interface import launch_interface
 from story_and_image_generator import generate_story_and_images
 from formatting import StorybookFormatter
-from config import FORMAT_OPTIONS, MAX_WORDS, TARGET_AGE, TEXT_MODEL, IMAGE_MODEL, IMAGE_SIZE
+from config import FORMAT_OPTIONS, TARGET_WORDS, TARGET_AGE, TEXT_MODEL, IMAGE_MODEL, IMAGE_SIZE
 
 if __name__ == "__main__":
     # 1. Gradio interface - useful for reviewing story and images
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # # 2. PDF generation - useful for reviewing final formating 
 
     USER_PROMPT = "a golden retriever that wanted to eat the biggest steak in the world"
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, MAX_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
+    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
     formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
     formatter.build_storybook()
 
