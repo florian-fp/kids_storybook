@@ -11,8 +11,7 @@ import base64
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
-from story_prompts import IMAGE_PROMPT_BREAKDOWN
-from prompts import CREATE_IMAGE_PROMPTS_SCHEMA
+from story_prompts import IMAGE_PROMPT_BREAKDOWN, CREATE_IMAGE_PROMPTS_SCHEMA
 from config import API_KEY_ENV_VAR, IMAGES_DIR
 
 
@@ -20,14 +19,17 @@ class ImageGenerator:
     """Handles the generation of images using OpenAI API.
     
     Args:
-        model: OpenAI model for image generation to be used
-        nb_images: number of images to generate for the story
+        image_model: OpenAI model for image generation to be used
+        text_model: OpenAI model for text generation
         size: size of the images
         target_age: target age group for the story
+        title: title of the story
+        story_content: content of the story
+        image_style: style of the images to generate
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
     """
 
-    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", api_key: Optional[str] = None):
+    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", image_style: str = "watercolor children's book illustration", api_key: Optional[str] = None):
         self.image_model = image_model
         self.text_model = text_model
         self.nb_images = nb_images
@@ -35,6 +37,7 @@ class ImageGenerator:
         self.target_age = target_age
         self.title = title
         self.story_content = story_content
+        self.image_style = image_style
         
         load_dotenv()
         self.api_key = os.getenv(API_KEY_ENV_VAR)
@@ -50,7 +53,8 @@ class ImageGenerator:
             nb_images=self.nb_images,
             target_age=self.target_age,
             title=self.title,
-            story_content=self.story_content
+            story_content=self.story_content,
+            image_style=self.image_style
         )
 
         

@@ -12,6 +12,7 @@ TEXT_MODEL = "gpt-4.1"  # only OpenAI models are supported for now
 NB_IMAGES_MAX = 15
 IMAGE_MODEL = "gpt-image-1"  # only OpenAI models are supported for now
 IMAGE_SIZE = "1536x1024"  # Portrait format closest to book ratio (816x1056px)
+IMAGE_STYLE = "watercolor children's book illustration"  # Default image style for children's books
 
 # Age-based words per image settings
 WORDS_PER_IMAGE_AGES_3_4 = 50    # More images for younger children (3-4 years)

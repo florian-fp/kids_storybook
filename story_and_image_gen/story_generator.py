@@ -74,7 +74,7 @@ class StoryGenerator:
                 "\n" + USER_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
             )
             
-            print(f"Consolidated prompt: {consolidated_prompt}")
+            # print(f"Consolidated prompt: {consolidated_prompt}")
             
             # Use function schema from prompts module
             function_schema = CREATE_STORY_SCHEMA
@@ -106,16 +106,16 @@ class StoryGenerator:
 def test():
     story_generator = StoryGenerator()
     USER_PROMPT = """
-    - Main character: xxx
-    - Supporting characters: xxx
-    - Setting: xxx
-    - Plot elements: xxx
-    - Tone & Style: xxx
-    - Language: xxx
-    - Tone: xxx
-    - Vocabulary: xxx   
+    - Main character: a pig that thinks that he is a panda
+    - Supporting characters: a peacock
+    - Setting: in a forest
+    - Plot elements: pig wants to eat bambo as a panda but the peacock explains to him that he is a pig and should not eat bamboo
+    - Tone & Style: funny and playful
+    - Language: simple and easy to understand
+    - Vocabulary: simple and easy to understand
+    - Lesson: be true to yourself   
     """
     story_data = story_generator.generate_story(USER_PROMPT)
     print(story_data)
 
-test()
+# test()

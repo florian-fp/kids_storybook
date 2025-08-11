@@ -4,67 +4,6 @@ Simple prompt storage for Story Generator
 """
 
 
-
-# Function schemas
-CREATE_STORY_SCHEMA = {
-    "type": "function",
-    "function": {
-        "name": "create_story",
-        "description": "Create a children's story with title, summary, and content",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "description": "A short, catchy title for the story"
-                },
-                "summary": {
-                    "type": "string",
-                    "description": "A brief 1-2 sentence summary of the story"
-                },
-                "story_content": {
-                    "type": "string",
-                    "description": "The full story content with paragraphs and formatting"
-                }
-            },
-            "required": ["title", "summary", "story_content"]
-        }
-    }
-}
-
-CREATE_IMAGE_PROMPTS_SCHEMA = {
-    "type": "function",
-    "function": {
-        "name": "create_image_prompts_table",
-        "description": "Create a table of image prompts for a children's story",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "image_prompts": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "image_number": {
-                                "type": "integer",
-                                "description": "The sequential number of the image (1, 2, 3, etc.)"
-                            },
-                            "prompt": {
-                                "type": "string",
-                                "description": "Detailed image generation prompt optimized for ChatGPT"
-                            }
-                        },
-                        "required": ["image_number", "prompt"]
-                    },
-                    "description": "Array of {nb_images} image prompts"
-                }
-            },
-            "required": ["image_prompts"]
-        }
-    }
-} 
-
-
 # Standard page HTML template
 STORY_STANDARD_TEMPLATE = """
     <!DOCTYPE html>

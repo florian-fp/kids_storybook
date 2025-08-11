@@ -11,7 +11,7 @@ sys.path.append('book_format')
 from interface import launch_interface
 from story_and_image_generator import generate_story_and_images
 from formatting import StorybookFormatter
-from config import FORMAT_OPTIONS, TARGET_WORDS, TARGET_AGE, TEXT_MODEL, IMAGE_MODEL, IMAGE_SIZE
+from config import FORMAT_OPTIONS, TARGET_WORDS, TARGET_AGE, TEXT_MODEL, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE
 
 if __name__ == "__main__":
     # 1. Gradio interface - useful for reviewing story and images
@@ -19,17 +19,27 @@ if __name__ == "__main__":
 
     # # 2. PDF generation - useful for reviewing final formating 
 
-    USER_PROMPT = "a golden retriever that wanted to eat the biggest steak in the world"
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, output_format="dictionnary")
-    formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
-    formatter.build_storybook()
 
-    # Test data in dictionary format
+    USER_PROMPT = """
+        - Main character: a young boy
+        - Supporting characters: a bird
+        - Setting: in the jungle
+        - Plot elements: young boy us scared in the jungle but the bird helps him find his way
+        - Tone & Style: fun, adventurous, and heartwarming
+        - Language: simple and easy to understand
+        - Vocabulary: simple and easy to understand
+        - Lesson: friendship and adventure
+    """
+    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, output_format="dictionnary")
+
+    # # # Test data in dictionary format
     # story_dict = {
-    #     "title": "Benny the Bubble's Adventure",
-    #     "summary": "A magical bubble learns to fly and explore the world",
-    #     "story_content": "Benny the bubble was born in a bathtub. He was small, shiny, and full of dreams. \"I want to fly!\" he said with a giggle. A gentle breeze carried him out the window, over trees, rooftops, and a surprised cat! \"Wheee!\" Benny sang, swirling with butterflies and dancing with dandelions. But POP!—a bird nearly bumped him. \"Careful!\" Benny laughed, bouncing higher. As the sun began to set, Benny sparkled like a tiny rainbow. Finally, he gently landed on a little girl's nose. She giggled, and Benny smiled, proud to have flown so far. And with a pop, he was gone.",
-    #     "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png", "images/output_4.png", "images/output_5.png"]
+    #     "title": "Sunny Pup and Splashy Seal's San Francisco Day",
+    #     "summary": "whatever",
+    #     "story_content": "Sunny pup bounces, tail goes swish! Splashy seal claps, “Let’s go, I wish!” \n \n Over the Golden Gate, wag and wiggle—\nDown to Fisherman’s Wharf, giggle, giggle!\n\nRolling, splashing, under blue sky,\nChasing fog, watching boats go by.\n\nSunny and Splashy, side by side,\nAdventure is fun, with friends as your guide!'",
+    #     "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png"]
     # }
 
+    formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
+    formatter.build_storybook()
     
