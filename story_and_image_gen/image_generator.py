@@ -31,7 +31,7 @@ class ImageGenerator:
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
     """
 
-    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", image_style: str = 'watercolor children\'s book illustration', api_key: Optional[str] = None):
+    def __init__(self, image_model: str, text_model: str, nb_images: int, size: str, target_age: int, title: str, story_content: str, image_style: str, api_key: Optional[str]):
         self.image_model = image_model
         self.text_model = text_model
         self.nb_images = nb_images
@@ -77,32 +77,57 @@ class ImageGenerator:
         
         return image_prompts_data
             
-    def generate_image(self, image_number: int, prompt: str):
+    def generate_image(self, image_number: int, prompt: str, method: str = "fal"):
         """Generate an image based on the prompt."""
-        print(f"🔍 Generating image {image_number}")
-        # Get OpenAI API key from environment
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
-
-        # Fal AI call    
-        result = fal_client.subscribe(
-            self.image_model,
-            arguments={
-                "prompt": prompt,
-                "openai_api_key": openai_api_key,
-                "size": self.size,
-                "number_of_images": self.nb_images,
-            },
-        )
         
-        # Handle FAL AI response by downloading the image from the URL
-        URL = result['images'][0]['url']
-        response = requests.get(URL)
-        image_bytes = response.content
+        if method == "openai":
+            print(f"🔍 Generating image {image_number} with OpenAI")
+            
+            # OpenAI image generation
+            image = self.client.images.generate(
+                model=self.image_model,
+                prompt=prompt,
+                n=1,  # Generate 1 image at a time
+                size=self.size,
+                quality="low"
+            )
+            
+            # Decode the base64 image data
+            image_bytes = base64.b64decode(image.data[0].b64_json)
+
+            # Save the image
+            with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
+                f.write(image_bytes)
+
+            return image_bytes
+        
+        else:
+            print(f"🔍 Generating image {image_number} with Fal AI")
+            
+            # Get OpenAI API key from environment
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                raise ValueError("OPENAI_API_KEY environment variable is required")
+  
+            result = fal_client.subscribe(
+                self.image_model,
+                arguments={
+                    "prompt": prompt,
+                    "openai_api_key": openai_api_key,
+                    "size": self.size,
+                    "number_of_images": 1,  # Generate 1 image at a time
+                },
+            )
+            
+            # Handle FAL AI response by downloading the image from the URL
+            URL = result['images'][0]['url']
+            print(f"🔍 Downloading from URL: {URL}")
+            response = requests.get(URL)    
+            image_bytes = response.content
 
         # Save the image as output.png
         with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
+            print(f"🔍 Saving image {image_number} to {IMAGES_DIR}/output_{image_number}.png")
             f.write(image_bytes)
 
-        return image_bytes 
+            return image_bytes 

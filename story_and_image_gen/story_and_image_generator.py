@@ -10,7 +10,7 @@ from config import IMAGE_GENERATION_DELAY, IMAGES_DIR, WORDS_PER_IMAGE_AGES_3_4,
 from openai import OpenAIError
 import os
 
-def generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style='watercolor children\'s book illustration', custom_style_text="", output_format="gradio"):
+def generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style='watercolor children\'s book illustration', custom_style_text="", output_format="gradio", image_generation_method=None):
     """
     Main function to generate story and images.
     
@@ -49,7 +49,6 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
         # Calculate number of images based on story length and target age
         story_content = story.get('story_content', '')
         word_count = len(story_content.split())
-        print(f"🔍 Story has {word_count} words")
         
         # Adjust words per image based on target age
         if target_age <= 4:
@@ -72,12 +71,12 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
             target_age=target_age, 
             title=story.get('title', 'Untitled'),
             story_content=story.get('story_content', 'No story content available'),
-            image_style=final_image_style
+            image_style=final_image_style,
+            api_key=os.getenv("OPENAI_API_KEY")
         )
         image_prompts = image_generator.get_image_prompts()
         image_prompts_list = [prompt_data.get('prompt', '') for prompt_data in image_prompts.get('image_prompts', [])]
         print(f"✅ Generated {len(image_prompts_list)} image prompts")
-
 
         # Store all images in a new image directory
         print("📁 Setting up image directory...")
@@ -86,7 +85,6 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
         
         os.makedirs(IMAGES_DIR, exist_ok=True)
 
-
         # Generate images
         print("🎨 Starting image generation...")
         for image_prompt in image_prompts.get('image_prompts', []):
@@ -94,7 +92,8 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
             image_number = image_prompt.get('image_number', 1) - 1
             image = image_generator.generate_image(
                 image_number=image_number, 
-                prompt=image_prompt.get('prompt', 'No prompt available')
+                prompt=image_prompt.get('prompt', 'No prompt available'),
+                method=image_generation_method
             )
         print(f"✅ {len(image_prompts_list)} images generated")
 

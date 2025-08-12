@@ -11,7 +11,7 @@ import sys
 sys.path.append('../story_and_image_gen')
 from story_and_image_generator import generate_story_and_images
 
-def generate_story_and_images_gradio(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style, custom_style_text):
+def generate_story_and_images_gradio(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style, custom_style_text, image_generation_method):
     """Generate story and images for the Gradio interface."""
     # Use custom style text if provided, otherwise use the dropdown value
     if custom_style_text and custom_style_text.strip():
@@ -19,7 +19,7 @@ def generate_story_and_images_gradio(user_prompt, text_model, target_words, targ
     else:
         final_image_style = image_style
     
-    result = generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, final_image_style, output_format="gradio")
+    result = generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, final_image_style, "", "gradio", image_generation_method)
     
     # Ensure we return the correct number of outputs for the interface
     # The interface expects: 3 story outputs + (NB_IMAGES_MAX+2) * 2 image outputs (title + content + "The End")
@@ -60,6 +60,12 @@ def create_interface():
                 label="Custom Style (Optional)",
                 placeholder="Leave empty to use the selected style above, or type your own custom style description here...",
                 lines=2
+            ),
+            gr.Dropdown(
+                label="Image Generation Method",
+                choices=["openai", "fal"],
+                value="openai",
+                info="Choose model to generate images."
             ),
         ],
         outputs=[

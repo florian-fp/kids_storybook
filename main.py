@@ -30,7 +30,7 @@ if __name__ == "__main__":
         - Vocabulary: simple and easy to understand
         - Lesson: friendship and adventure
     """
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, "", output_format="dictionary")
+    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, "", output_format="dictionary", image_generation_method="openai")
     
     # # Test data in dictionary format
     # story_dict = {
