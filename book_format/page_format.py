@@ -47,15 +47,16 @@ STORY_STANDARD_TEMPLATE = """
 
             .text-overlay {
                 position: absolute;
-                bottom: 1.5in;
-                left: 1in;
-                right: 1in;
-                background: rgba(255, 255, 255, 0.95);
-                padding: 0.75in;
+                bottom: 1in;
+                left: 0.5in;
+                right: 0.5in;
+                background: rgba(255, 255, 255, 0.7);
+                padding: 0.5in;
                 border-radius: 0.5in;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
                 z-index: 2;
-                border: 3px solid #ff6b6b;
+                border: 3px solid #87CEEB;
+                backdrop-filter: blur(2px);
             }
 
             .text {

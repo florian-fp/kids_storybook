@@ -8,11 +8,13 @@ This module handles the generation of images for stories using OpenAI API.
 import os
 import json
 import base64
+import requests
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 from story_prompts import IMAGE_PROMPT_BREAKDOWN, CREATE_IMAGE_PROMPTS_SCHEMA
 from config import API_KEY_ENV_VAR, IMAGES_DIR
+import fal_client
 
 
 class ImageGenerator:
@@ -29,7 +31,7 @@ class ImageGenerator:
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY env var.
     """
 
-    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", image_style: str = "watercolor children's book illustration", api_key: Optional[str] = None):
+    def __init__(self, image_model: str = "gpt-image-1", text_model: str = "gpt-4.1", nb_images: int = 1, size: str = "1024x1024", target_age: int = 3, title: str = "", story_content: str = "", image_style: str = 'watercolor children\'s book illustration', api_key: Optional[str] = None):
         self.image_model = image_model
         self.text_model = text_model
         self.nb_images = nb_images
@@ -56,7 +58,6 @@ class ImageGenerator:
             story_content=self.story_content,
             image_style=self.image_style
         )
-
         
         # Use function schema from prompts module
         function_schema = CREATE_IMAGE_PROMPTS_SCHEMA
@@ -67,9 +68,9 @@ class ImageGenerator:
             tools=[function_schema],
             tool_choice={"type": "function", "function": {"name": "create_image_prompts_table"}},
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=5000
         )
-        
+    
         # Extract the function call response
         tool_call = response.choices[0].message.tool_calls[0]
         image_prompts_data = json.loads(tool_call.function.arguments)
@@ -78,16 +79,27 @@ class ImageGenerator:
             
     def generate_image(self, image_number: int, prompt: str):
         """Generate an image based on the prompt."""
-        image = self.client.images.generate(
-            model = self.image_model,
-            prompt = prompt,
-            n = self.nb_images, 
-            size = self.size,
-            quality = "low"
-        )
+        print(f"🔍 Generating image {image_number}")
+        # Get OpenAI API key from environment
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
 
-        # Decode the base64 image data
-        image_bytes = base64.b64decode(image.data[0].b64_json)
+        # Fal AI call    
+        result = fal_client.subscribe(
+            self.image_model,
+            arguments={
+                "prompt": prompt,
+                "openai_api_key": openai_api_key,
+                "size": self.size,
+                "number_of_images": self.nb_images,
+            },
+        )
+        
+        # Handle FAL AI response by downloading the image from the URL
+        URL = result['images'][0]['url']
+        response = requests.get(URL)
+        image_bytes = response.content
 
         # Save the image as output.png
         with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:

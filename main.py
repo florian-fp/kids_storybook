@@ -22,21 +22,21 @@ if __name__ == "__main__":
 
     USER_PROMPT = """
         - Main character: a young boy
-        - Supporting characters: a bird
-        - Setting: in the jungle
-        - Plot elements: young boy us scared in the jungle but the bird helps him find his way
+        - Supporting characters: a golden retriever pup
+        - Setting: in San Francisco
+        - Plot elements: young boy is visiting San Francisco with his golden retriever pup who is acting as a guide
         - Tone & Style: fun, adventurous, and heartwarming
         - Language: simple and easy to understand
         - Vocabulary: simple and easy to understand
         - Lesson: friendship and adventure
     """
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, output_format="dictionnary")
-
-    # # # Test data in dictionary format
+    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, "", output_format="dictionary")
+    
+    # # Test data in dictionary format
     # story_dict = {
     #     "title": "Sunny Pup and Splashy Seal's San Francisco Day",
     #     "summary": "whatever",
-    #     "story_content": "Sunny pup bounces, tail goes swish! Splashy seal claps, “Let’s go, I wish!” \n \n Over the Golden Gate, wag and wiggle—\nDown to Fisherman’s Wharf, giggle, giggle!\n\nRolling, splashing, under blue sky,\nChasing fog, watching boats go by.\n\nSunny and Splashy, side by side,\nAdventure is fun, with friends as your guide!'",
+    #     "story_content": "Sunny pup bounces, tail goes swish! Splashy seal claps, 'Let's go, I wish!' \n \n Over the Golden Gate, wag and wiggle—\nDown to Fisherman's Wharf, giggle, giggle!\n\nRolling, splashing, under blue sky,\nChasing fog, watching boats go by.\n\nSunny and Splashy, side by side,\nAdventure is fun, with friends as your guide!",
     #     "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png"]
     # }
 

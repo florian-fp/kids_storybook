@@ -5,15 +5,21 @@ Gradio Interface for Story Generator
 
 import gradio as gr
 from config import (
-    TARGET_WORDS, TARGET_AGE, TEXT_MODEL, NB_IMAGES_MAX, IMAGE_MODEL, IMAGE_SIZE
+    TARGET_WORDS, TARGET_AGE, TEXT_MODEL, NB_IMAGES_MAX, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE
 )
 import sys
 sys.path.append('../story_and_image_gen')
 from story_and_image_generator import generate_story_and_images
 
-def generate_story_and_images_gradio(user_prompt, text_model, target_words, target_age, image_model, image_size):
+def generate_story_and_images_gradio(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style, custom_style_text):
     """Generate story and images for the Gradio interface."""
-    result = generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, output_format="gradio")
+    # Use custom style text if provided, otherwise use the dropdown value
+    if custom_style_text and custom_style_text.strip():
+        final_image_style = custom_style_text
+    else:
+        final_image_style = image_style
+    
+    result = generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, final_image_style, output_format="gradio")
     
     # Ensure we return the correct number of outputs for the interface
     # The interface expects: 3 story outputs + (NB_IMAGES_MAX+2) * 2 image outputs (title + content + "The End")
@@ -40,6 +46,21 @@ def create_interface():
             gr.Slider(label="Target Age", value=TARGET_AGE, minimum=3, maximum=8, step=1),
             gr.Dropdown(label="Image Model", choices=["gpt-image-1", "dall-e-3", "dall-e-2"], value=IMAGE_MODEL),
             gr.Dropdown(label="Image Size", choices=["1024x1536", "1024x1024", "1536x1024", "auto"], value=IMAGE_SIZE),
+            gr.Dropdown(label="Image Style", choices=[
+                'watercolor children\'s book illustration',
+                "cartoon style",
+                "realistic illustration", 
+                "artistic painting",
+                "minimalist design",
+                "digital art",
+                "hand-drawn sketch",
+                "3D rendered"
+            ], value=IMAGE_STYLE),
+            gr.Textbox(
+                label="Custom Style (Optional)",
+                placeholder="Leave empty to use the selected style above, or type your own custom style description here...",
+                lines=2
+            ),
         ],
         outputs=[
             gr.Textbox(label="Title", interactive=False),

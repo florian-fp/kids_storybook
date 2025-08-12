@@ -80,6 +80,11 @@ Edit `config.py` to modify:
 - Story length
 - Model settings
 
+### **Image Style Options**
+The interface provides multiple image style options:
+- **Predefined Styles**: Choose from styles like "watercolor children's book illustration", "cartoon style", "realistic illustration", etc.
+- **Custom Style**: Always visible text input where you can type your own style description (e.g., "oil painting in the style of Van Gogh")
+
 ### **Custom Prompts**
 Edit `prompts.py` to modify:
 - Story generation prompts

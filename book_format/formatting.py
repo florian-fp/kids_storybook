@@ -46,11 +46,24 @@ class StorybookFormatter:
         # Split the story text into sentences
         sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])'
         sentences = re.split(sentence_pattern, self.story_dict['story_content'])
+        print(f"🔍 {len(sentences)} sentences")
         
-        if len(sentences) % self.nb_content_pages == 0:
-            nb_sentences_per_page = (round(len(sentences) / self.nb_content_pages))
+        # Ensure we have enough content for all pages
+        if len(sentences) < self.nb_content_pages:
+            # If we don't have enough sentences, split some sentences further
+            words = self.story_dict['story_content'].split()
+            words_per_page = max(1, len(words) // self.nb_content_pages)
+            sentences = []
+            for i in range(0, len(words), words_per_page):
+                page_words = words[i:i + words_per_page]
+                sentences.append(' '.join(page_words))
+        
+        # Calculate sentences per page more intelligently
+        total_sentences = len(sentences)
+        if total_sentences <= self.nb_content_pages:
+            nb_sentences_per_page = 1
         else:
-            nb_sentences_per_page = (round(len(sentences) / self.nb_content_pages)) + 1
+            nb_sentences_per_page = max(1, total_sentences // self.nb_content_pages)
 
         # Create the title page
         title_page_content = {
@@ -59,10 +72,22 @@ class StorybookFormatter:
         }
         story_pages[0] = title_page_content
 
-        # Create each page content
+        # Create each page content with better distribution
+        remaining_sentences = sentences.copy()
         for page_number in range(1, self.nb_content_pages+1):
-            # Evenly split the sentences across the pages
-            page_sentences = sentences[(page_number-1) * nb_sentences_per_page:(page_number) * nb_sentences_per_page]
+            if not remaining_sentences:
+                break
+                
+            # Take sentences for this page
+            if page_number == self.nb_content_pages:
+                # Last content page gets all remaining sentences
+                page_sentences = remaining_sentences
+                remaining_sentences = []
+            else:
+                # Take sentences for this page
+                page_sentences = remaining_sentences[:nb_sentences_per_page]
+                remaining_sentences = remaining_sentences[nb_sentences_per_page:]
+            
             page_content = {
                 'text': '. '.join(page_sentences),
                 'image': self.story_dict['images'][page_number]
@@ -76,6 +101,7 @@ class StorybookFormatter:
         }
         story_pages[self.nb_content_pages+1] = end_page_content
 
+        print(f"story_pages: {story_pages}")
         return story_pages
 
     def build_html(self, story_pages):
@@ -110,7 +136,6 @@ class StorybookFormatter:
         # Save title page
         with open(f"{HTML_DIR}/storybook_html_page_{page_number}.html", 'w', encoding='utf-8') as f:
             f.write(page_html)
-        # print(f"Title page saved to {HTML_DIR}/storybook_html_page_{page_number}.html")
 
         # Create the main story pages
         for page_number in sorted(story_pages.keys()):

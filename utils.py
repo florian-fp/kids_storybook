@@ -39,7 +39,7 @@ def create_success_output(story: dict, nb_images: int, image_prompts_list: List[
     return tuple(output) 
 
 
-def create_success_output_dictionnary(story: dict, nb_images: int, image_prompts_list: List[str]) -> dict:
+def create_success_output_dictionary(story: dict, nb_images: int, image_prompts_list: List[str]) -> dict:
     """Create standardized success output for the interface."""
     output = story.copy()
     output['images'] = [f"images/output_{i}.png" for i in range(nb_images+2)]  # +2 for title and "The End" pages
