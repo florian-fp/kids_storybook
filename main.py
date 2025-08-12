@@ -30,15 +30,15 @@ if __name__ == "__main__":
         - Vocabulary: simple and easy to understand
         - Lesson: friendship and adventure
     """
-    story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, "", output_format="dictionary", image_generation_method="openai")
+    # story_dict = generate_story_and_images(USER_PROMPT, TEXT_MODEL, TARGET_WORDS, TARGET_AGE, IMAGE_MODEL, IMAGE_SIZE, IMAGE_STYLE, "", output_format="dictionary", image_generation_method="fal")
     
-    # # Test data in dictionary format
-    # story_dict = {
-    #     "title": "Sunny Pup and Splashy Seal's San Francisco Day",
-    #     "summary": "whatever",
-    #     "story_content": "Sunny pup bounces, tail goes swish! Splashy seal claps, 'Let's go, I wish!' \n \n Over the Golden Gate, wag and wiggle—\nDown to Fisherman's Wharf, giggle, giggle!\n\nRolling, splashing, under blue sky,\nChasing fog, watching boats go by.\n\nSunny and Splashy, side by side,\nAdventure is fun, with friends as your guide!",
-    #     "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png"]
-    # }
+    # Test data in dictionary format
+    story_dict = {
+        "title": "Sunny Pup and Splashy Seal's San Francisco Day",
+        "summary": "whatever",
+        "story_content": "Sunny pup bounces, tail goes swish! Splashy seal claps, 'Let's go, I wish!' \n \n Over the Golden Gate, wag and wiggle—\nDown to Fisherman's Wharf, giggle, giggle!\n\nRolling, splashing, under blue sky,\nChasing fog, watching boats go by.\n\nSunny and Splashy, side by side,\nAdventure is fun, with friends as your guide!",
+        "images": ["images/output_0.png", "images/output_1.png", "images/output_2.png", "images/output_3.png"]
+    }
 
     formatter = StorybookFormatter(story_dict, FORMAT_OPTIONS)
     formatter.build_storybook()

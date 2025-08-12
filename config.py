@@ -10,11 +10,14 @@ TEXT_MODEL = "gpt-4.1"  # only OpenAI models are supported for now
 
 # Image generation settings
 NB_IMAGES_MAX = 15
-IMAGE_MODEL = "gpt-image-1"
-# IMAGE_MODEL = "fal-ai/gpt-image-1/text-to-image/byok"
+# IMAGE_MODEL = "gpt-image-1"
+IMAGE_MODEL = "fal-ai/gpt-image-1/text-to-image/byok"
 # IMAGE_MODEL = "fal-ai/ideogram/character"
 IMAGE_SIZE = "1024x1024"
 IMAGE_STYLE = 'watercolor children\'s book illustration'  # Default image style for children's books
+
+# FAL AI size handling - some models don't respect size parameters consistently
+FAL_AI_FORCE_SQUARE = True  # Force square dimensions for FAL AI to improve consistency
 
 # Age-based words per image settings
 WORDS_PER_IMAGE_AGES_3_4 = 25    # More images for younger children (3-4 years)
