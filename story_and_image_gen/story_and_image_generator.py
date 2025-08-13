@@ -75,6 +75,7 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
         image_prompts = image_generator.get_image_prompts()
         image_prompts_list = [prompt_data.get('prompt', '') for prompt_data in image_prompts.get('image_prompts', [])]
         print(f"✅ Image prompts | Generated {len(image_prompts_list)} image prompts")
+        # print(f"- Image prompts: {image_prompts_list}")
 
         # Store all images in a new image directory
         if os.path.exists(IMAGES_DIR):

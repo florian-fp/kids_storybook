@@ -75,7 +75,6 @@ class ImageGenerator:
         tool_call = response.choices[0].message.tool_calls[0]
         image_prompts_data = json.loads(tool_call.function.arguments)
         
-        print(f"🔍 Image prompt generation tokens used: {response.usage.total_tokens} (input: {response.usage.prompt_tokens}, output: {response.usage.completion_tokens})")
         
         return image_prompts_data
             
@@ -145,6 +144,35 @@ class ImageGenerator:
                     "number_of_images": 1,  # Generate 1 image at a time
                 },
             )
+            
+            # Handle FAL AI response by downloading the image from the URL
+            URL = result['images'][0]['url']
+            print(f"🔍 Downloading from URL: {URL}")
+            response = requests.get(URL)    
+            image_bytes = response.content
+
+            # Save the image
+            with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
+                f.write(image_bytes)
+
+            return image_bytes
+
+        elif method == "falai-ideogram-v3": 
+            print(f"🔍 Generating image {image_number} with Fal AI with model {self.image_model} using ref image")
+            
+            result = fal_client.subscribe(
+                self.image_model,
+                arguments={
+                    "prompt": prompt,
+                    "size": self.size,
+                    "number_of_images": 1,
+                    "rendering_speed": "TURBO",
+                    "image_urls": ["https://v3.fal.media/files/penguin/HYRsa2-YoNd-oIy0PXpAW_image.png"],
+                    "color_palette": {"name": "PASTEL"}
+                },
+            )
+            
+
             
             # Handle FAL AI response by downloading the image from the URL
             URL = result['images'][0]['url']
