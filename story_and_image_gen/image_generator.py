@@ -68,16 +68,18 @@ class ImageGenerator:
             tools=[function_schema],
             tool_choice={"type": "function", "function": {"name": "create_image_prompts_table"}},
             temperature=0.7,
-            max_tokens=5000
+            max_tokens=32768
         )
     
         # Extract the function call response
         tool_call = response.choices[0].message.tool_calls[0]
         image_prompts_data = json.loads(tool_call.function.arguments)
         
+        print(f"🔍 Image prompt generation tokens used: {response.usage.total_tokens} (input: {response.usage.prompt_tokens}, output: {response.usage.completion_tokens})")
+        
         return image_prompts_data
             
-    def generate_image(self, image_number: int, prompt: str, method: str = "fal"):
+    def generate_image(self, image_number: int, prompt: str, method: str):
         """Generate an image based on the prompt."""
         
         if method == "openai":
@@ -101,9 +103,10 @@ class ImageGenerator:
 
             return image_bytes
         
-        else:
-            print(f"🔍 Generating image {image_number} with Fal AI")
+        elif method == "falai-openai":
+            print(f"🔍 Generating image {image_number} with Fal AI and OpenAI")
             
+
             # Get OpenAI API key from environment
             openai_api_key = os.getenv("OPENAI_API_KEY")
             if not openai_api_key:
@@ -125,9 +128,37 @@ class ImageGenerator:
             response = requests.get(URL)    
             image_bytes = response.content
 
-        # Save the image as output.png
-        with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
-            print(f"🔍 Saving image {image_number} to {IMAGES_DIR}/output_{image_number}.png")
-            f.write(image_bytes)
+            # Save the image
+            with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
+                f.write(image_bytes)
 
             return image_bytes 
+
+        elif method == "falai-non-openai": 
+            print(f"🔍 Generating image {image_number} with Fal AI with model {self.image_model}")
+            
+            result = fal_client.subscribe(
+                self.image_model,
+                arguments={
+                    "prompt": prompt,
+                    "size": self.size,
+                    "number_of_images": 1,  # Generate 1 image at a time
+                },
+            )
+            
+            # Handle FAL AI response by downloading the image from the URL
+            URL = result['images'][0]['url']
+            print(f"🔍 Downloading from URL: {URL}")
+            response = requests.get(URL)    
+            image_bytes = response.content
+
+            # Save the image
+            with open(f"{IMAGES_DIR}/output_{image_number}.png", "wb") as f:
+                f.write(image_bytes)
+
+            return image_bytes
+
+        else:
+            print(f"❌ Image generation method {method} not supported")
+            return None
+            

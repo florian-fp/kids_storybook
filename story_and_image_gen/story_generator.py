@@ -27,7 +27,7 @@ from utils import add_rate_limiting_delay, create_error_output, create_success_o
 class StoryGenerator:
     """Handles the generation of children's stories using OpenAI API."""
     
-    def __init__(self, model: str = "gpt-4.1", target_words: int = 150, target_age: int = 3, api_key: Optional[str] = None):
+    def __init__(self, model: str, target_words, target_age: int, api_key: Optional[str]):
         """
         Initialize the story generator.
         
@@ -87,7 +87,7 @@ class StoryGenerator:
                 tools=[function_schema],
                 tool_choice={"type": "function", "function": {"name": "create_story"}},
                 temperature=0.7,
-                max_tokens=1000
+                max_tokens=8000
             )
             
             # Extract the function call response
@@ -101,21 +101,3 @@ class StoryGenerator:
         except Exception as e:
             raise ValueError(f"Unexpected error during story generation: {e}")
 
-
-
-def test():
-    story_generator = StoryGenerator()
-    USER_PROMPT = """
-    - Main character: a pig that thinks that he is a panda
-    - Supporting characters: a peacock
-    - Setting: in a forest
-    - Plot elements: pig wants to eat bambo as a panda but the peacock explains to him that he is a pig and should not eat bamboo
-    - Tone & Style: funny and playful
-    - Language: simple and easy to understand
-    - Vocabulary: simple and easy to understand
-    - Lesson: be true to yourself   
-    """
-    story_data = story_generator.generate_story(USER_PROMPT)
-    print(story_data)
-
-# test()

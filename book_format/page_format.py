@@ -57,6 +57,7 @@ STORY_STANDARD_TEMPLATE = """
                 z-index: 2;
                 border: 3px solid #87CEEB;
                 backdrop-filter: blur(2px);
+                max-width: 90%;
             }
 
             .text {

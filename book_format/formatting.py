@@ -30,7 +30,7 @@ class StorybookFormatter:
         # Calculate nb_content_pages from the number of images
         total_images = len(self.story_dict.get('images', []))
         self.nb_content_pages = total_images - 2    
-        print(f"📄 Calculated {self.nb_content_pages} content pages from {total_images} total images (title + content + 'The End')")
+        
 
     def break_story_into_pages(self):
         """
@@ -46,7 +46,6 @@ class StorybookFormatter:
         # Split the story text into sentences
         sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])'
         sentences = re.split(sentence_pattern, self.story_dict['story_content'])
-        print(f"🔍 {len(sentences)} sentences")
         
         # Ensure we have enough content for all pages
         if len(sentences) < self.nb_content_pages:
@@ -207,7 +206,7 @@ class StorybookFormatter:
                 print(f"Error creating PDF: {e}")
                 return False
 
-    def merge_pdfs(self, output_filename="storybook.pdf"):
+    def merge_pdfs(self, output_filename):
         """Merge individual PDF pages into a single storybook PDF
         
         Args:
@@ -258,7 +257,7 @@ class StorybookFormatter:
         self.build_pdf()
         
         # Merge individual PDFs into a single storybook
-        self.merge_pdfs()
+        self.merge_pdfs("storybook.pdf")
 
         print(f"✅ Storybook PDF generated")
 

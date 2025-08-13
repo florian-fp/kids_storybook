@@ -9,7 +9,7 @@ from openai import OpenAIError
 from config import IMAGE_GENERATION_DELAY
 
 
-def add_rate_limiting_delay(seconds: int = IMAGE_GENERATION_DELAY):
+def add_rate_limiting_delay(seconds: int):
     """Add delay to respect API rate limits."""
     time.sleep(seconds)
 

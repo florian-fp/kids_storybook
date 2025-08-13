@@ -10,7 +10,7 @@ from config import IMAGE_GENERATION_DELAY, IMAGES_DIR, WORDS_PER_IMAGE_AGES_3_4,
 from openai import OpenAIError
 import os
 
-def generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style='watercolor children\'s book illustration', custom_style_text="", output_format="gradio", image_generation_method=None):
+def generate_story_and_images(user_prompt, text_model, target_words, target_age, image_model, image_size, image_style, custom_style_text, output_format, image_generation_method):
     """
     Main function to generate story and images.
     
@@ -28,27 +28,26 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
     Returns:
         tuple: Formatted output for Gradio interface or dictionary for PDF generation
     """
-    print(f"📚 START")
+    print(f"--- CREATING NEW STORYBOOK ---")
     
     try:
         
         # Use custom style text if provided, otherwise use the default image_style
         final_image_style = custom_style_text.strip() if custom_style_text and custom_style_text.strip() else image_style
-        print(f"🎨 Using image style: {final_image_style}")
         
         # Generate a story
-        print("📖 Starting story generation...")
         story_generator = StoryGenerator(
             model=text_model, 
             target_words=target_words, 
-            target_age=target_age
+            target_age=target_age,
+            api_key=os.getenv("OPENAI_API_KEY")
         )
         story = story_generator.generate_story(user_prompt=user_prompt)
-        print(f"✅ Story generated: '{story.get('title', 'Untitled')}'")
         
         # Calculate number of images based on story length and target age
         story_content = story.get('story_content', '')
         word_count = len(story_content.split())
+        print(f"✅ Story generated titled: '{story.get('title', 'Untitled')}' with {word_count} words")
         
         # Adjust words per image based on target age
         if target_age <= 4:
@@ -59,10 +58,9 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
             words_per_image = WORDS_PER_IMAGE_AGES_7_PLUS  # Fewer images for older children (7+)
         
         nb_images = max(1, word_count // words_per_image) + 1  # +1 for remaining words
-        print(f"📊 Story has {word_count} words. Generating {nb_images} content images with {words_per_image} words per image for target age {target_age}")
+        print(f"- {nb_images} content images will be generated with {words_per_image} words per image for target age {target_age}")
     
         # Generate images prompts
-        print("🖼️ Starting image prompt generation...")
         image_generator = ImageGenerator(
             image_model=image_model, 
             text_model=text_model, 
@@ -76,33 +74,35 @@ def generate_story_and_images(user_prompt, text_model, target_words, target_age,
         )
         image_prompts = image_generator.get_image_prompts()
         image_prompts_list = [prompt_data.get('prompt', '') for prompt_data in image_prompts.get('image_prompts', [])]
-        print(f"✅ Generated {len(image_prompts_list)} image prompts")
+        print(f"✅ Image prompts | Generated {len(image_prompts_list)} image prompts")
 
         # Store all images in a new image directory
-        print("📁 Setting up image directory...")
         if os.path.exists(IMAGES_DIR):
             os.system(f"rm -rf {IMAGES_DIR}")
         
         os.makedirs(IMAGES_DIR, exist_ok=True)
 
         # Generate images
-        print("🎨 Starting image generation...")
         for image_prompt in image_prompts.get('image_prompts', []):
             add_rate_limiting_delay(IMAGE_GENERATION_DELAY)  # Use configurable delay
             image_number = image_prompt.get('image_number', 1) - 1
+            print(f"- Generating image: {image_number}")
             image = image_generator.generate_image(
                 image_number=image_number, 
                 prompt=image_prompt.get('prompt', 'No prompt available'),
                 method=image_generation_method
             )
-        print(f"✅ {len(image_prompts_list)} images generated")
+        print(f"✅ Image generation | {len(image_prompts_list)} images generated")
 
-        print(f"🎯 Returning {output_format} format...")
         if output_format == "gradio":
             # Return tuple useful for Gradio interface
             return create_success_output(story, nb_images, image_prompts_list)
         elif output_format == "dictionary":
             # Return a dictionary with the story, the images and the image prompts more useful for formatting purposes
+            return create_success_output_dictionary(story, nb_images, image_prompts_list)
+        else:
+            # Default to dictionary format if output_format is not recognized
+            print(f"❌ Output format {output_format} not specified, defaulting to dictionary format")
             return create_success_output_dictionary(story, nb_images, image_prompts_list)
 
 
