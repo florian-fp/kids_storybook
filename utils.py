@@ -18,7 +18,7 @@ def create_error_output(nb_images: int, error_message: str) -> Tuple:
     """Create standardized error output for the interface."""
     error_output = ["Error occurred", "Error occurred", "Error occurred"]
     for i in range(nb_images):
-        error_output.append(None)  # No image
+        error_output.append("No image available")  # No image
         error_output.append(f"Error: {error_message}")  # Error message as prompt
     return tuple(error_output)
 
